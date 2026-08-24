@@ -98,17 +98,17 @@ echo $INSTANCE
 
 The run-instances command launches a new instance using these parameters:
 
--[] *Image* : Uses the AMI value obtained earlier from Parameter Store
+- [ ] **Image** : Uses the AMI value obtained earlier from Parameter Store
 
--[] *Subnet* : Specifies the public subnet retrieved earlier and, by association, the VPC in which to launch the instance
+- [ ] **Subnet** : Specifies the public subnet retrieved earlier and, by association, the VPC in which to launch the instance
 
--[] *Security group* : Uses the web security group retrieved earlier, which permits HTTP access
+- [ ] **Security group** : Uses the web security group retrieved earlier, which permits HTTP access
 
--[] *User data* : References the user data script that you downloaded, which installs the web application
+- [ ] **User data** : References the user data script that you downloaded, which installs the web application
 
--[] *Instance type* : Specifies the type of instance to launch
+- [ ] **Instance type** : Specifies the type of instance to launch
 
--[] *Tags* : Assigns a name tag with the value of Web Server
+- [ ] **Tags** : Assigns a name tag with the value of Web Server
 
 The query parameter specifies that the command should return the instance ID once the instance is launched.
 
