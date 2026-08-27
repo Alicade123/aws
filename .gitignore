@@ -1,2 +1,2 @@
-info.json
-data.yaml
+*.yaml
+*.json
