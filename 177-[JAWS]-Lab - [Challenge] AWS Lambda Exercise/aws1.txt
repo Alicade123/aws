@@ -1,0 +1,1 @@
+Amazon Web Services provides cloud computing services, EC2, SNS, SQS, etc. Alicade
