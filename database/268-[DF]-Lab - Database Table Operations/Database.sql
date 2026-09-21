@@ -1,3 +1,7 @@
+sudo su
+cd /home/ec2-user/
+
+mysql -u root --password='re:St@rt!9'
 
 CREATE TABLE world.country (
   `Code` CHAR(3) NOT NULL DEFAULT '',

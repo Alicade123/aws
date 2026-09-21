@@ -274,10 +274,4 @@ Congratulations! You now have successfully:
   - [DROP database](https://mariadb.com/kb/en/drop-database/)
   - [DROP table](https://mariadb.com/kb/en/drop-table/)
 
-For more information about AWS Training and Certification, see [AWS Training and Certification](https://aws.amazon.com/training/).
-
-_Your feedback is welcome and appreciated._
-
-If you would like to share any suggestions or corrections, please provide the details in our [AWS Training and Certification Contact Form](https://support.aws.amazon.com/#/contacts/aws-training).
-
-_© 2022 Amazon Web Services, Inc. and its affiliates. All rights reserved. This work may not be reproduced or redistributed, in whole or in part, without prior written permission from Amazon Web Services, Inc. Commercial copying, lending, or selling is prohibited._
+@Thanks.
