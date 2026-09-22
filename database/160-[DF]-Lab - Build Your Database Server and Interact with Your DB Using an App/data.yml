@@ -1,0 +1,10 @@
+{
+  database-endpoint: "lab-db.cegzvkqs14zd.us-west-2.rds.amazonaws.com",
+  WebServer IP address: "52.37.86.81",
+  link: http://52.37.86.81/rds.php,
+  Endpoint: lab-db.cegzvkqs14zd.us-west-2.rds.amazonaws.com,
+  Database: lab,
+  Username: main,
+  Password: "••••••••••••",
+  lastoutputlink: "http://52.37.86.81/rds.php"
+}
