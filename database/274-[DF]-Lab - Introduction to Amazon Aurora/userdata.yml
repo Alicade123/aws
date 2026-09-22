@@ -1,0 +1,4 @@
+{
+  endpoint: "aurora-instance-1.cp1ryef9gi6q.us-west-2.rds.amazonaws.com",
+  lijk : mysql -u admin --password='admin123' -h aurora-instance-1.cp1ryef9gi6q.us-west-2.rds.amazonaws.com
+}
