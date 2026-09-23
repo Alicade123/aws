@@ -1,0 +1,4 @@
+{
+  endpoint: "aurora-instance-1.cp1ryef9gi6q.us-west-2.rds.amazonaws.com",
+  link : mysql -u admin --password='***' -h aurora-instance-1.cp1ryef9gi6q.us-west-2.rds.amazonaws.com
+}
