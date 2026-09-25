@@ -85,8 +85,8 @@ PostgreSQL, MySQL, and MariaDB**.
 |-----------------------|-------------|
 | DB cluster identifier | `aurora`    |
 | Master username       | `admin`     |
-| Master password       | `admin123`  |
-| Confirm password      | `admin123`  |
+| Master password       | `***`  |
+| Confirm password      | `***`  |
 
 ### Instance Configuration
 
@@ -184,7 +184,7 @@ aurora.cluster-cabcdefghijklm.us-west-2.rds.amazonaws.com
 Replace `<endpoint_goes_here>` with your copied endpoint and run:
 
 ```bash
-mysql -u admin --password='admin123' -h <endpoint_goes_here>
+mysql -u admin --password='***' -h <endpoint_goes_here>
 ```
 
 Example:

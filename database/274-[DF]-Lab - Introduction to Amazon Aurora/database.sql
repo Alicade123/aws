@@ -1,4 +1,4 @@
-mysql - u admin --password='admin123' -h aurora.cluster-123456789012.us-west-2.rds.amazonaws.com
+mysql - u admin --password='***' -h aurora.cluster-123456789012.us-west-2.rds.amazonaws.com
 
 SHOW DATABASES;
 
