@@ -1,0 +1,225 @@
+# Introduction to Amazon DynamoDB
+
+## Overview
+
+Amazon DynamoDB is a fast and flexible NoSQL database service for applications
+that need consistent, single-digit millisecond latency at any scale. It is fully
+managed and supports both **document** and **key-value** data models, making it
+a great fit for mobile, web, gaming, ad-tech, IoT, and many other applications.
+
+In this lab, you will create a DynamoDB table to store music library data,
+query it, and then delete the table.
+
+---
+
+## Topics Covered
+
+- Create an Amazon DynamoDB table
+- Enter data into an Amazon DynamoDB table
+- Query an Amazon DynamoDB table
+- Delete an Amazon DynamoDB table
+
+---
+
+## Duration
+
+Approximately 35 minutes
+
+---
+
+## Getting Started
+
+### Access the AWS Management Console
+
+1. Choose **Start Lab** at the upper-right corner
+2. Wait for the circle next to **AWS** to turn **green** (lab is ready)
+3. Click the green circle to open the **AWS Management Console**
+
+> Do not change the lab Region unless specifically instructed to do so.
+
+---
+
+## Task 1: Create a New Table
+
+> Each DynamoDB table requires a **partition key** to distribute data across
+> servers. A **sort key** can also be added. Together, they uniquely identify
+> each item in the table.
+
+1. In the search bar, type **DynamoDB** and select it
+2. Choose **Create table** and configure the following:
+
+| Field          | Value    | Type     |
+|----------------|----------|----------|
+| Table name     | `Music`  | —        |
+| Partition key  | `Artist` | `String` |
+| Sort key       | `Song`   | `String` |
+
+3. Leave default settings for indexes and provisioned capacity
+4. Scroll down and choose **Create table**
+
+> Wait for the **Music** table status to show **Active** before proceeding.
+
+---
+
+## Task 2: Add Data
+
+> DynamoDB tables are schema-less — only the partition key and sort key are
+> required. Each item can have a different set of attributes.
+
+### Key Concepts
+
+| Term          | Description                                                         |
+|---------------|---------------------------------------------------------------------|
+| **Table**     | A collection of data on a particular topic                          |
+| **Item**      | A group of attributes uniquely identifiable in the table (like a row) |
+| **Attribute** | A fundamental data element within an item (like a column)           |
+
+### Navigate to the Table
+
+1. Choose the **Music** table
+2. Choose **Actions** → **Create item**
+
+---
+
+### Item 1 — Pink Floyd
+
+| Attribute | Type     | Value                      |
+|-----------|----------|----------------------------|
+| Artist    | String   | `Pink Floyd`               |
+| Song      | String   | `Money`                    |
+| Album     | String   | `The Dark Side of the Moon`|
+| Year      | Number   | `1973`                     |
+
+Choose **Create item**.
+
+---
+
+### Item 2 — John Lennon
+
+| Attribute | Type     | Value        |
+|-----------|----------|--------------|
+| Artist    | String   | `John Lennon`|
+| Song      | String   | `Imagine`    |
+| Album     | String   | `Imagine`    |
+| Year      | Number   | `1971`       |
+| Genre     | String   | `Soft rock`  |
+
+> This item includes an extra **Genre** attribute — demonstrating that items
+> in the same table can have different attributes.
+
+---
+
+### Item 3 — Psy
+
+| Attribute       | Type   | Value                        |
+|-----------------|--------|------------------------------|
+| Artist          | String | `Psy`                        |
+| Song            | String | `Gangnam Style`              |
+| Album           | String | `Psy 6 (Six Rules), Part 1`  |
+| Year            | Number | `2011`                       |
+| LengthSeconds   | Number | `219`                        |
+
+> This item includes a **LengthSeconds** attribute — further demonstrating
+> the flexibility of a NoSQL schema.
+
+---
+
+## Task 3: Modify an Existing Item
+
+> An error was made — the Year for Psy's Gangnam Style needs to be corrected.
+
+1. In the DynamoDB dashboard, under **Tables**, choose **Explore Items**
+2. Select the **Music** table
+3. Choose the **Psy** item
+4. Change **Year** from `2011` to `2012`
+5. Choose **Save changes**
+
+---
+
+## Task 4: Query the Table
+
+DynamoDB supports two ways to retrieve data:
+
+| Method    | How It Works                                               | Efficiency  |
+|-----------|------------------------------------------------------------|-------------|
+| **Query** | Finds items using the primary key (and optionally sort key)| Fast — fully indexed |
+| **Scan**  | Looks through every item in the table                      | Slow — for larger tables |
+
+---
+
+### Query by Partition Key and Sort Key
+
+1. Expand **Scan/Query items** → choose **Query**
+2. Enter the following:
+
+| Field                     | Value           |
+|---------------------------|-----------------|
+| Artist (Partition key)    | `Psy`           |
+| Song (Sort key)           | `Gangnam Style` |
+
+3. Choose **Run**
+
+> The result appears immediately — queries are the most efficient way to
+> retrieve data from DynamoDB.
+
+---
+
+### Scan with a Filter
+
+1. Scroll up and choose **Scan**
+2. Expand **Filters** and enter the following:
+
+| Field          | Value  |
+|----------------|--------|
+| Attribute name | `Year` |
+| Type           | `Number` |
+| Value          | `1971` |
+
+3. Choose **Run**
+
+> Only the song released in 1971 (John Lennon — Imagine) will be returned.
+
+---
+
+## Task 5: Delete the Table
+
+> Deleting a table also permanently deletes all data stored in it.
+
+1. In the DynamoDB dashboard, under **Tables**, choose **Update settings**
+2. Select the **Music** table
+3. Choose **Actions** → **Delete table**
+4. On the confirmation panel, type `delete` and choose **Delete table**
+
+---
+
+## Summary of DynamoDB Concepts
+
+| Concept               | Description                                                        |
+|-----------------------|--------------------------------------------------------------------|
+| Partition key         | Required; used to distribute data across DynamoDB servers          |
+| Sort key              | Optional; combined with partition key to uniquely identify items   |
+| Schema-less design    | Items in the same table can have different attributes              |
+| Query                 | Fast retrieval using primary key; fully indexed                    |
+| Scan                  | Full table search; less efficient for large datasets               |
+| Flexible attributes   | No need to pre-define all attributes; add as needed per item       |
+
+---
+
+## Key Notes
+
+- DynamoDB has **no limit** on the number of items stored in a table
+- Only the **partition key** (and sort key if used) are required when writing an item
+- Data can also be loaded faster using the **AWS CLI**, programmatic access,
+  or third-party tools
+- **Scan** with filters is useful for exploration but avoid it on large tables
+  in production — use **Query** whenever possible
+
+---
+
+## Additional Resources
+
+- [Amazon DynamoDB Documentation](https://docs.aws.amazon.com/dynamodb/)
+- [DynamoDB Core Components](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/HowItWorks.CoreComponents.html)
+- [Query vs Scan in DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html)
+- [DynamoDB Best Practices](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/best-practices.html)
+- [AWS Training and Certification](https://aws.amazon.com/training/)
