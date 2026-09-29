@@ -1,0 +1,246 @@
+# Using AWS Systems Manager
+![alt text](image.png)
+## Overview
+
+AWS Systems Manager is a collection of capabilities used to centralize
+operational data and automate tasks across AWS resources. It can configure
+and manage EC2 instances, on-premises servers, virtual machines, and other
+AWS resources at scale.
+
+---
+
+## Objectives
+
+By completing this lab, you will be able to use Systems Manager to:
+
+- Verify configurations and permissions
+- Run tasks on multiple servers
+- Update application settings or configurations
+- Access the command line on an instance
+
+---
+
+## Duration
+
+**Approximately 30 minutes**
+
+---
+
+## Getting Started
+
+### Access the AWS Management Console
+
+1. Choose **Start Lab** at the upper-right corner
+2. Wait until the message **"Lab status: ready"** appears, then close the panel
+3. Choose **AWS** to open the AWS Management Console in a new browser tab
+
+> Do not change the Region unless specifically instructed to do so.
+
+---
+
+## Task 1: Generate Inventory Lists for Managed Instances
+
+> Fleet Manager collects OS information, application data, and metadata from
+> EC2 instances without needing SSH access to each instance.
+
+1. In the search bar, type **Systems Manager** and press **Enter**
+2. In the left navigation pane, under **Node Management**, choose **Fleet Manager**
+3. Choose the **Account management** dropdown → choose **Set up inventory**
+4. Configure the following options:
+
+### Inventory Details
+
+| Field | Value                    |
+|-------|--------------------------|
+| Name  | `Inventory-Association`  |
+
+### Targets
+
+| Field               | Value                          |
+|---------------------|--------------------------------|
+| Specify targets by  | `Manually selecting instances` |
+| Instance            | `Managed Instance`             |
+
+5. Leave all other settings as default
+6. Choose **Setup Inventory**
+
+> A success banner appears: **"Setup inventory request succeeded"**
+
+7. Choose the **Node ID** link → go to the **Node overview**
+8. Choose the **Inventory** tab to review installed applications
+
+> Using Inventory, you can validate software configurations across instances
+> without connecting to each one via SSH.
+
+---
+
+## Task 2: Install a Custom Application Using Run Command
+
+> Run Command allows you to run scripts and commands on EC2 instances
+> without needing SSH access.
+
+**What gets installed:**
+- Apache web server
+- PHP
+- AWS SDK
+- Widget Manufacturing Dashboard web application
+
+### Steps
+
+1. Expand the menu icon in the upper-left corner
+2. Under **Node Management**, choose **Run Command**
+3. Choose **Run command**
+4. In the search box, filter by:
+   - **Owner** → **Owned by me**
+
+> Do not type "Owner" or "Owned by me" as text — use the dropdown filters.
+
+5. Select the document that appears with the following details:
+
+| Field               | Value                     |
+|---------------------|---------------------------|
+| Description         | `Install Dashboard App`   |
+| Document version    | `1 (Default)`             |
+
+6. For **Target selection**, choose **Choose instances manually**
+7. In the **Instances** section, select **Managed Instance**
+8. Under **Output options**, clear **Enable an S3 bucket**
+9. Expand **AWS command line interface command** to view the equivalent CLI command
+10. Choose **Run**
+
+> After 1–2 minutes, the **Overall status** should change to **Success**.
+> Refresh using the refresh icon if needed.
+
+### Validate the Installation
+
+1. Choose the **Details** dropdown at the top of the lab instructions
+2. Choose **Show** and copy the **ServerIP** value
+3. Open a new browser tab, paste the IP address, and press **Enter**
+
+> The **Widget Manufacturing Dashboard** should appear — confirming the
+> application was installed successfully without SSH.
+
+---
+
+## Task 3: Use Parameter Store to Manage Application Settings
+
+> Parameter Store provides secure, hierarchical storage for configuration
+> data, secrets, passwords, database strings, and license codes —
+> stored as plain text or encrypted values.
+
+1. In the left navigation pane, under **Application Management**,
+   choose **Parameter Store**
+2. Choose **Create parameter** and configure the following:
+
+| Field       | Value                      |
+|-------------|----------------------------|
+| Name        | `/dashboard/show-beta-features` |
+| Description | `Display beta features`    |
+| Tier        | Default                    |
+| Type        | Default                    |
+| Value       | `True`                     |
+
+3. Choose **Create parameter**
+
+> A success banner appears: **"Create parameter request succeeded"**
+
+### Validate the Parameter
+
+1. Return to the browser tab showing the Widget Manufacturing Dashboard
+2. Refresh the page
+
+> Three charts are now displayed — the application reads Parameter Store
+> and activates the beta feature when the parameter exists.
+
+This is a common pattern for **"dark features"** — installed but inactive
+until enabled via configuration.
+
+**Optional:** Delete the parameter and refresh the browser tab —
+the third chart will disappear again.
+
+---
+
+## Task 4: Use Session Manager to Access Instances
+
+> Session Manager provides secure, browser-based shell access to EC2
+> instances without opening inbound ports, maintaining bastion hosts,
+> or managing SSH keys.
+
+**Advantages over SSH:**
+
+| Feature              | SSH                  | Session Manager          |
+|----------------------|----------------------|--------------------------|
+| Inbound ports        | Port 22 must be open | No open ports needed     |
+| Key management       | SSH keys required    | No keys needed           |
+| Audit logging        | Limited              | Full logs via CloudTrail |
+| Access control       | Key-based            | IAM policy-based         |
+
+### Steps
+
+1. In the left navigation pane, under **Node Management**,
+   choose **Session Manager**
+2. Choose **Start session**
+3. Select **Managed Instance** → choose **Start session**
+4. A new session tab opens in your browser
+5. Click anywhere in the session window to activate the cursor
+
+### Run Commands in the Session
+
+List the installed application files:
+
+```bash
+ls /var/www/html
+```
+
+Retrieve instance metadata and describe EC2 instances:
+
+```bash
+# Get region
+AZ=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
+export AWS_DEFAULT_REGION=${AZ::-1}
+
+# List information about EC2 instances
+aws ec2 describe-instances
+```
+
+> The output returns EC2 instance details in JSON format.
+
+> You can verify that SSH is not required by confirming that **port 22
+> is closed** in the instance's security group — Session Manager works
+> entirely without it.
+
+---
+
+## Summary of Systems Manager Capabilities Used
+
+| Capability        | Purpose                                                        |
+|-------------------|----------------------------------------------------------------|
+| Fleet Manager     | Collect inventory and metadata from managed instances          |
+| Run Command       | Execute scripts and commands without SSH access                |
+| Parameter Store   | Store and retrieve configuration data and feature flags        |
+| Session Manager   | Secure browser-based shell access without SSH or open ports    |
+
+---
+
+## Key Notes
+
+- Systems Manager requires the **SSM Agent** to be installed and running
+  on the managed instance
+- **Run Command** can target instances individually or by using **tags**
+  to run commands across a fleet
+- **Parameter Store** supports hierarchical paths like `/dashboard/<option>`
+  for organized configuration management
+- **Session Manager** access is controlled via **IAM policies** and fully
+  audited through **AWS CloudTrail**
+- Session Manager on **Windows** provides **PowerShell** access instead
+  of a Linux shell
+
+---
+
+## Additional Resources
+
+- [What is AWS Systems Manager?](https://docs.aws.amazon.com/systems-manager/latest/userguide/what-is-systems-manager.html)
+- [AWS Systems Manager Session Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html)
+- [AWS Systems Manager Run Command](https://docs.aws.amazon.com/systems-manager/latest/userguide/execute-remote-commands.html)
+- [AWS Systems Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html)
+- [AWS Training and Certification](https://aws.amazon.com/training/)
