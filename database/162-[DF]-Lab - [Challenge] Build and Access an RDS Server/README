@@ -1,0 +1,323 @@
+# Challenge Lab: Build Your DB Server and Interact With Your DB
+
+## Overview
+
+This challenge lab reinforces the concept of leveraging an AWS-managed database
+instance for solving relational database needs using **Amazon RDS**.
+
+Amazon RDS makes it easy to set up, operate, and scale a relational database
+in the cloud while managing time-consuming database administration tasks.
+Supported engines include: **Amazon Aurora, Oracle, Microsoft SQL Server,
+PostgreSQL, MySQL, and MariaDB**.
+
+---
+
+## Objectives
+
+By completing this lab, you will be able to:
+
+- Create an Amazon RDS instance
+- Connect to the instance from a Linux EC2 server
+- Create tables and insert data using SQL
+- Query data and perform joins between tables
+
+---
+
+## Duration
+
+**Approximately 45 minutes**
+
+---
+
+## Lab Restrictions
+
+Before starting, note the following constraints:
+
+| Setting                  | Allowed Values                                          |
+|--------------------------|---------------------------------------------------------|
+| Database Engine          | Amazon Aurora (Provisioned) or MySQL only — no Serverless |
+| Template                 | Dev/Test or Free tier                                   |
+| Availability & Durability| No standby instance                                     |
+| DB Instance Size         | Burstable classes — `db.t*.micro` to `db.t*.medium`    |
+| Storage                  | General Purpose SSD (gp2), up to 100 GB                |
+| VPC                      | Lab VPC only                                            |
+| Purchasing Options       | On-Demand only                                          |
+
+---
+
+## Getting Started
+
+### Access the AWS Management Console
+
+1. Choose **Start Lab** at the upper-right corner
+2. Wait until the message **"Lab status: ready"** appears, then close the panel
+3. Choose **AWS** to open the AWS Management Console in a new browser tab
+
+---
+
+## Step 1: Launch the RDS Database Instance
+
+1. In the search bar, type **RDS** and select it
+2. Choose **Create database** → select **Standard create**
+3. Configure the following:
+
+### Engine & Template
+
+| Field           | Value                  |
+|-----------------|------------------------|
+| Engine type     | `MySQL`                |
+| Template        | `Free tier / Dev/Test` |
+
+### Settings
+
+| Field                  | Value          |
+|------------------------|----------------|
+| DB instance identifier | `lab-db`       |
+| Master username        | `admin`        |
+| Master password        | `**************` |
+| Confirm password       | `**************` |
+
+### Instance Configuration
+
+| Field            | Value                                      |
+|------------------|--------------------------------------------|
+| DB instance class| `Burstable classes (db.t3.micro or similar)`|
+| Storage type     | `General Purpose SSD (gp2)`               |
+| Allocated storage| Up to `100 GB`                             |
+
+### Connectivity
+
+| Field              | Value                                                  |
+|--------------------|--------------------------------------------------------|
+| VPC                | `Lab VPC`                                              |
+| Public access      | `No`                                                   |
+| VPC security group | Allow inbound port `3306` from `10.0.0.0/16` or the LinuxServer security group |
+
+### Additional Settings
+
+- Under **Additional configuration**, disable **Enable Enhanced Monitoring**
+
+4. Choose **Create database** and wait until the status shows **Available**
+5. Copy and save the **Endpoint** address — it will look like:
+```
+lab-db.ce2wy9q7kxdo.us-west-2.rds.amazonaws.com
+```
+
+---
+
+## Step 2: Connect to the Linux Server (EC2)
+
+1. Choose the **Details** dropdown at the top of the lab instructions
+2. Choose **Show**
+3. Download the SSH key:
+   - **Linux / macOS** → Download `.pem`
+   - **Windows** → Download `.ppk`
+4. Note the **LinuxServer** public IP address
+5. SSH into the server:
+
+```bash
+ssh -i /path/to/labsuser.pem ec2-user@<LinuxServer-IP>
+```
+
+---
+
+## Step 3: Install MySQL Client on Amazon Linux 2
+
+> The default MariaDB client may cause authentication errors with MySQL 8.
+> Install the official MySQL 8 community client instead.
+
+```bash
+# 1. Remove old packages
+sudo yum remove mariadb-server mariadb-libs -y
+
+# 2. Add the MySQL 8 repository
+sudo yum install -y https://dev.mysql.com/get/mysql80-community-release-el7-7.noarch.rpm
+
+# 3. Install MySQL community client
+sudo yum install -y mysql-community-client --nogpgcheck
+```
+
+---
+
+## Step 4: Connect to the RDS Database
+
+Replace `<RDS-ENDPOINT>` with your copied endpoint and run:
+
+```bash
+mysql -h <RDS-ENDPOINT> -u admin -p
+```
+
+Enter your master password (`**********************`) when prompted.
+
+---
+
+## Step 5: SQL Execution Scripts
+
+### Create the Database
+
+```sql
+CREATE DATABASE IF NOT EXISTS lab_db;
+USE lab_db;
+```
+
+---
+
+### Create and Populate the RESTART Table
+
+> Screenshot required after CREATE TABLE, INSERT, and SELECT.
+
+```sql
+CREATE TABLE RESTART (
+    student_id      INT PRIMARY KEY,
+    student_name    VARCHAR(50),
+    restart_city    VARCHAR(50),
+    graduation_date DATETIME
+);
+```
+
+```sql
+INSERT INTO RESTART VALUES
+(1,  'Alice Smith',     'New York', '2024-05-15 10:00:00'),
+(2,  'Bob Jones',       'Chicago',  '2024-05-15 10:00:00'),
+(3,  'Charlie Brown',   'Austin',   '2024-06-20 11:00:00'),
+(4,  'Diana Prince',    'Seattle',  '2024-06-20 11:00:00'),
+(5,  'Evan Wright',     'Denver',   '2024-07-10 09:30:00'),
+(6,  'Fiona Gallagher', 'Boston',   '2024-07-10 09:30:00'),
+(7,  'George Clark',    'Miami',    '2024-08-01 14:00:00'),
+(8,  'Hannah Abbott',   'Atlanta',  '2024-08-01 14:00:00'),
+(9,  'Ian Malcolm',     'Dallas',   '2024-09-12 16:00:00'),
+(10, 'Julia Roberts',   'Phoenix',  '2024-09-12 16:00:00');
+```
+
+```sql
+SELECT * FROM RESTART;
+```
+
+---
+
+### Create and Populate the CLOUD_PRACTITIONER Table
+
+> Screenshot required after CREATE TABLE, INSERT, and SELECT.
+
+```sql
+CREATE TABLE CLOUD_PRACTITIONER (
+    student_id         INT PRIMARY KEY,
+    certification_date DATETIME
+);
+```
+
+```sql
+INSERT INTO CLOUD_PRACTITIONER VALUES
+(1, '2024-06-01 09:00:00'),
+(2, '2024-06-15 11:30:00'),
+(3, '2024-07-01 14:00:00'),
+(4, '2024-07-20 10:00:00'),
+(5, '2024-08-05 15:00:00');
+```
+
+```sql
+SELECT * FROM CLOUD_PRACTITIONER;
+```
+
+---
+
+### Perform an Inner Join Between Both Tables
+
+> Screenshot required — displays Student ID, Student Name, and Certification Date.
+
+```sql
+SELECT
+    r.student_id,
+    r.student_name,
+    c.certification_date
+FROM RESTART r
+INNER JOIN CLOUD_PRACTITIONER c
+    ON r.student_id = c.student_id;
+```
+
+---
+
+## Screenshots Required for Submission
+
+| Step | Action                                      |
+|------|---------------------------------------------|
+| 1    | `CREATE TABLE RESTART` — success output     |
+| 2    | `INSERT` into RESTART — 10 rows inserted    |
+| 3    | `SELECT * FROM RESTART` — all 10 rows       |
+| 4    | `CREATE TABLE CLOUD_PRACTITIONER` — success |
+| 5    | `INSERT` into CLOUD_PRACTITIONER — 5 rows   |
+| 6    | `SELECT * FROM CLOUD_PRACTITIONER` — all 5 rows |
+| 7    | `INNER JOIN` result — Student ID, Name, Certification Date |
+
+---
+
+## Troubleshooting
+
+### Error 2003 — Cannot Connect to MySQL Server
+
+```
+ERROR 2003 (HY000): Can't connect to MySQL server on '<endpoint>' (110)
+```
+
+**Cause:** Port `3306` is blocked by the RDS security group inbound rules.
+
+**Fix:** Edit the RDS security group inbound rules to allow:
+- **Type:** MySQL/Aurora
+- **Port:** `3306`
+- **Source:** `10.0.0.0/16` or the LinuxServer security group
+
+---
+
+### Error 2059 — Authentication Plugin Not Supported
+
+```
+ERROR 2059 (HY000): Authentication plugin 'caching_sha2_password' cannot be loaded
+```
+
+**Cause:** The default MariaDB client does not support MySQL 8's default
+authentication plugin.
+
+**Fix:** Install the official MySQL 8 community client as shown in Step 3.
+
+---
+
+## Summary of Tables Created
+
+### RESTART Table
+
+| Column          | Type        | Description              |
+|-----------------|-------------|--------------------------|
+| student_id      | INT (PK)    | Unique student identifier|
+| student_name    | VARCHAR(50) | Full name of the student |
+| restart_city    | VARCHAR(50) | City of the Restart program |
+| graduation_date | DATETIME    | Date and time of graduation |
+
+### CLOUD_PRACTITIONER Table
+
+| Column             | Type     | Description                    |
+|--------------------|----------|--------------------------------|
+| student_id         | INT (PK) | Unique student identifier (FK) |
+| certification_date | DATETIME | Date of AWS certification      |
+
+---
+
+## Key Concepts
+
+- **Amazon RDS** manages patching, backups, and replication automatically,
+  allowing you to focus on your application and data
+- **Security Groups** act as virtual firewalls — the RDS instance must allow
+  inbound traffic on port `3306` from the EC2 instance to establish a connection
+- **INNER JOIN** returns only rows where a matching `student_id` exists in
+  both the `RESTART` and `CLOUD_PRACTITIONER` tables
+- **Burstable instances** (`db.t3.*`) are cost-effective for dev/test workloads
+  that do not require consistent high CPU performance
+
+---
+
+## Additional Resources
+
+- [Amazon RDS Documentation](https://docs.aws.amazon.com/rds/)
+- [Amazon RDS FAQs](https://aws.amazon.com/rds/faqs/)
+- [MySQL CREATE TABLE](https://dev.mysql.com/doc/refman/8.0/en/create-table.html)
+- [MySQL JOIN Syntax](https://dev.mysql.com/doc/refman/8.0/en/join.html)
+- [AWS Training and Certification](https://aws.amazon.com/training/)
