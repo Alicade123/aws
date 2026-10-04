@@ -1,0 +1,11 @@
+{
+  instanceSessionURL: "https://us-west-2.console.aws.amazon.com/systems-manager/session-manager/i-0f33036c6ea58caee",
+
+  "AWS Access Key ID": "*****************************",
+
+  "AWS Secret Access Key": "***************************",
+
+  "Default region name": "us-west-2",
+
+  "Default output format": "json"
+}
