@@ -1,0 +1,356 @@
+# Scaling and Load Balancing Your Architecture
+
+## Overview
+
+In this lab, you use **Elastic Load Balancing (ELB)** and **Amazon EC2 Auto Scaling**
+to load balance and automatically scale your infrastructure.
+
+- **ELB** automatically distributes incoming application traffic across multiple
+  EC2 instances and Availability Zones, providing fault tolerance
+- **Auto Scaling** maintains application availability by automatically scaling
+  EC2 capacity in or out based on conditions you define — ideal for applications
+  with stable or variable demand patterns
+
+### Starting Architecture
+```
+Public Subnet
+└── Web Server 1 (EC2)
+```
+
+### Final Architecture
+```
+                    ┌─── Application Load Balancer ───┐
+                    │                                  │
+         AZ 1 - Private Subnet 1        AZ 2 - Private Subnet 2
+         └── EC2 Instance (ASG)         └── EC2 Instance (ASG)
+```
+
+---
+
+## Objectives
+
+By completing this lab, you will be able to:
+
+- Create an AMI from an EC2 instance
+- Create a load balancer
+- Create a launch template and an Auto Scaling group
+- Configure an Auto Scaling group to scale new instances within private subnets
+- Use Amazon CloudWatch alarms to monitor infrastructure performance
+
+---
+
+## Duration
+
+**Approximately 45 minutes**
+
+---
+
+## Getting Started
+
+### Access the AWS Management Console
+
+1. Choose **Start Lab** at the upper-right corner
+2. Wait for the **AWS** indicator to turn green (lab is ready)
+3. Choose **AWS** to open the AWS Management Console in a new browser tab
+
+> Do not change the lab Region unless specifically instructed to do so.
+
+---
+
+## Task 1: Create an AMI for Auto Scaling
+
+> An AMI saves the contents of the boot disk so that new instances can be
+> launched with identical content.
+
+1. In the search bar, type **EC2** and select it
+2. In the left navigation pane, under **Instances**, choose **Instances**
+3. Select **Web Server 1** — confirm it is in a **Running** state
+4. From the **Actions** dropdown, choose **Image and templates → Create image**
+5. Configure the following:
+
+| Field                | Value                        |
+|----------------------|------------------------------|
+| Image name           | `Web Server AMI`             |
+| Image description    | `Lab AMI for Web Server`     |
+
+6. Choose **Create image**
+
+> Note the **AMI ID** from the confirmation screen — it will be used when
+> configuring the Auto Scaling group.
+
+---
+
+## Task 2: Create a Load Balancer
+
+> The load balancer distributes traffic across multiple EC2 instances and
+> Availability Zones.
+
+1. In the left navigation pane, under **Load Balancing**, choose **Load Balancers**
+2. Choose **Create load balancer**
+3. Under **Application Load Balancer**, choose **Create**
+
+### Basic Configuration
+
+| Field               | Value    |
+|---------------------|----------|
+| Load balancer name  | `LabELB` |
+
+### Network Mapping
+
+| Field              | Value                                      |
+|--------------------|--------------------------------------------|
+| VPC                | `Lab VPC`                                  |
+| Availability Zone 1| `Public Subnet 1`                          |
+| Availability Zone 2| `Public Subnet 2`                          |
+
+### Security Groups
+
+- Remove the **default** security group
+- Select **Web Security Group** (permits HTTP access)
+
+### Create the Target Group
+
+1. In the **Listeners and routing** section, choose **Create target group**
+2. Configure the following on the new tab:
+
+| Field              | Value              |
+|--------------------|--------------------|
+| Target type        | `Instances`        |
+| Target group name  | `lab-target-group` |
+
+3. Choose **Next** → **Create target group**
+4. Close the Target groups tab and return to the Load Balancers tab
+5. Choose **Refresh** next to the **Forward to** dropdown
+6. Select **lab-target-group** from the dropdown
+7. Choose **Create load balancer**
+
+> Copy and save the **DNS name** of the load balancer — you will need it later.
+
+---
+
+## Task 3: Create a Launch Template
+
+> A launch template defines the configuration Auto Scaling uses when
+> launching new EC2 instances.
+
+1. In the search bar, type **EC2** and select it
+2. In the left navigation pane, under **Instances**, choose **Launch Templates**
+3. Choose **Create launch template** and configure the following:
+
+### Template Details
+
+| Field                      | Value                                |
+|----------------------------|--------------------------------------|
+| Launch template name       | `lab-app-launch-template`            |
+| Template version description | `A web server for the load test app` |
+| Auto Scaling guidance      | Enable (check the box)               |
+
+### AMI
+
+- Choose the **My AMIs** tab → confirm **Web Server AMI** is selected
+
+### Instance Configuration
+
+| Field          | Value       |
+|----------------|-------------|
+| Instance type  | `t3.micro`  |
+| Key pair       | `Don't include in launch template` |
+| Security group | `Web Security Group` |
+
+4. Choose **Create launch template**
+
+---
+
+## Task 4: Create an Auto Scaling Group
+
+1. Select **lab-app-launch-template**
+2. From the **Actions** dropdown, choose **Create Auto Scaling group**
+
+### Step 1 — Name
+
+| Field                  | Value                   |
+|------------------------|-------------------------|
+| Auto Scaling group name| `Lab Auto Scaling Group` |
+
+### Step 2 — Network
+
+| Field                       | Value                                                    |
+|-----------------------------|----------------------------------------------------------|
+| VPC                         | `Lab VPC`                                                |
+| Availability Zones & Subnets| `Private Subnet 1 (10.0.1.0/24)` and `Private Subnet 2 (10.0.3.0/24)` |
+
+### Step 3 — Load Balancing & Health Checks
+
+| Field                    | Value                            |
+|--------------------------|----------------------------------|
+| Load balancing           | `Attach to an existing load balancer` |
+| Target group             | `lab-target-group \| HTTP`        |
+| Health check type        | `ELB`                            |
+
+### Step 4 — Group Size & Scaling Policy
+
+| Field              | Value |
+|--------------------|-------|
+| Desired capacity   | `2`   |
+| Minimum capacity   | `2`   |
+| Maximum capacity   | `4`   |
+| Scaling policy     | `Target tracking scaling policy` |
+| Metric type        | `Average CPU utilization` |
+| Target value       | `50`  |
+
+> Auto Scaling will maintain ~50% average CPU utilization, adding or removing
+> instances automatically as load fluctuates.
+
+### Step 5 — Tags
+
+| Key    | Value          |
+|--------|----------------|
+| `Name` | `Lab Instance` |
+
+5. Choose **Create Auto Scaling group**
+
+> Two new EC2 instances will launch in private subnets across both
+> Availability Zones to meet the desired capacity of 2.
+
+> If you see an error about `t3.micro` not being available, repeat this task
+> using `t2.micro` instead.
+
+---
+
+## Task 5: Verify That Load Balancing is Working
+
+1. In the left navigation pane, under **Instances**, choose **Instances**
+   - Two **Lab Instance** instances should be running (launched by Auto Scaling)
+2. In the left navigation pane, under **Load Balancing**, choose **Target Groups**
+3. Select **lab-target-group**
+4. In the **Registered targets** section, wait until both instances show
+   **Health status: healthy**
+
+> A healthy status confirms the load balancer will send traffic to those instances.
+
+5. Open a new browser tab, paste the **load balancer DNS name**, and press **Enter**
+
+> The **Load Test application** should appear — confirming the load balancer
+> is routing traffic correctly to the Auto Scaling group instances.
+
+---
+
+## Task 6: Test Auto Scaling
+
+> You will generate CPU load to trigger the Auto Scaling alarm and cause
+> new instances to launch.
+
+### Step 1 — View CloudWatch Alarms
+
+1. In the search bar, type **CloudWatch** and select it
+2. In the left navigation pane, under **Alarms**, choose **All alarms**
+
+Two alarms were automatically created by the Auto Scaling group:
+
+| Alarm         | Condition                        | Action                    |
+|---------------|----------------------------------|---------------------------|
+| `AlarmHigh`   | CPU Utilization > 50%            | Add instances             |
+| `AlarmLow`    | CPU Utilization < 50%            | Remove instances          |
+
+3. Confirm **AlarmHigh** currently shows state **OK**
+
+### Step 2 — Generate Load
+
+1. Return to the browser tab with the **Load Test application**
+2. Choose **Load Test** next to the AWS logo
+
+> This generates high CPU load across all instances in the Auto Scaling group.
+> Do not close this tab.
+
+### Step 3 — Monitor Alarms
+
+1. Return to the **CloudWatch** tab
+2. Refresh every **60 seconds**
+3. Within 5 minutes:
+   - **AlarmLow** status changes to **OK**
+   - **AlarmHigh** status changes to **In alarm**
+
+> Once CPU exceeds 50% for more than 3 minutes, Auto Scaling launches
+> additional instances (up to the maximum of 4).
+
+### Step 4 — Verify New Instances
+
+1. In the search bar, type **EC2** and select it
+2. Under **Instances**, choose **Instances**
+
+> More than two **Lab Instance** instances should now be running —
+> Auto Scaling added them in response to the high CPU alarm.
+
+---
+
+## Task 7: Terminate the Web Server 1 Instance
+
+> Web Server 1 was used only to create the AMI and is no longer needed.
+
+1. Select **Web Server 1** (ensure it is the only instance selected)
+2. From the **Instance state** dropdown, choose **Terminate instance**
+3. Choose **Terminate**
+
+---
+
+## Optional Challenge: Create an AMI Using AWS CLI
+
+1. Connect to one of your **Lab Instance** EC2 instances using
+   **EC2 Instance Connect**
+2. At the top of the lab page, choose **AWS Details → Show** to retrieve
+   your AWS CLI credentials
+3. Configure AWS credentials:
+
+```bash
+aws configure
+```
+
+4. Create an AMI using the AWS CLI — replace the values as needed:
+
+```bash
+aws ec2 create-image \
+  --instance-id <your-instance-id> \
+  --name "CLI-Created-AMI" \
+  --description "AMI created via AWS CLI" \
+  --no-reboot
+```
+
+> You can find your instance ID from the EC2 Instances console.
+
+---
+
+## Summary of Resources Created
+
+| Resource            | Name / Value              | Purpose                                          |
+|---------------------|---------------------------|--------------------------------------------------|
+| AMI                 | `Web Server AMI`          | Base image for Auto Scaling group instances      |
+| Load Balancer       | `LabELB`                  | Distributes traffic across AZs and instances     |
+| Target Group        | `lab-target-group`        | Routes load balancer traffic to EC2 instances    |
+| Launch Template     | `lab-app-launch-template` | Defines instance config for Auto Scaling         |
+| Auto Scaling Group  | `Lab Auto Scaling Group`  | Maintains 2–4 instances based on CPU utilization |
+| CloudWatch Alarms   | `AlarmHigh` / `AlarmLow`  | Trigger scaling actions at 50% CPU threshold     |
+
+---
+
+## Key Concepts
+
+- **AMI (Amazon Machine Image)** — a snapshot of an instance used as a
+  template to launch identical new instances
+- **Application Load Balancer** — operates at Layer 7 (HTTP/HTTPS),
+  routing requests across healthy registered targets
+- **Launch Template** — defines the instance configuration that Auto Scaling
+  uses when launching new instances
+- **Target Tracking Policy** — Auto Scaling automatically adjusts capacity
+  to keep a metric (CPU utilization) near the target value
+- **CloudWatch Alarms** — monitor metrics and trigger Auto Scaling actions
+  when thresholds are breached for a defined period
+
+---
+
+## Additional Resources
+
+- [Amazon EC2 Auto Scaling Getting Started](https://docs.aws.amazon.com/autoscaling/ec2/userguide/get-started-with-ec2-auto-scaling.html)
+- [Getting Started with Elastic Load Balancing](https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/load-balancer-getting-started.html)
+- [Amazon CloudWatch Alarms](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html)
+- [AWS CLI create-image Reference](https://docs.aws.amazon.com/cli/latest/reference/ec2/create-image.html)
+- [AWS Training and Certification](https://aws.amazon.com/training/)
