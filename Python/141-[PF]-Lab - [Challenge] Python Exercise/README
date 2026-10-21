@@ -1,0 +1,218 @@
+# Challenge Lab: Python Scripting Exercise
+
+## Overview
+
+In this challenge lab, you connect to an EC2 instance named **Linux Host** and
+write a **Python** script that finds all prime numbers between 1 and 250 and
+stores the results in a `results.txt` file.
+
+---
+
+## Objectives
+
+- Connect to a Linux EC2 instance using SSH
+- Write a Python script to compute prime numbers
+- Write script output to a file
+- Test the script and verify the results
+- Record the absolute path of the saved script
+
+---
+
+## Duration
+
+**Approximately 40 minutes**
+
+---
+
+## Getting Started
+
+### Launch the Lab Environment
+
+1. Choose **Start Lab** at the upper-right corner
+2. Wait until **"Lab status: ready"** appears, then close the panel
+3. Choose **Details → Show**
+4. Copy the **ips -- public** value into a text file named `Lab Details.txt`
+
+> This value is the public IP address of the **Linux Host**.
+
+---
+
+## Connect to the Linux Host via SSH
+
+### Windows Users
+
+1. Choose **Details → Show** → **Download PPK** → save `labsuser.ppk`
+2. Note the **PublicIP** address and close the panel
+3. Download and open [PuTTY](https://the.earth.li/~sgtatham/putty/latest/w64/putty.exe)
+4. Configure the session following the
+   [AWS PuTTY guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/connect-linux-inst-from-windows.html)
+
+### macOS / Linux Users
+
+1. Choose **Details → Show** → **Download PEM** → save `labsuser.pem`
+2. Open a terminal and navigate to the download location:
+
+```bash
+cd ~/Downloads
+```
+
+3. Set read-only permissions on the key:
+
+```bash
+chmod 400 labsuser.pem
+```
+
+4. Connect to the Linux Host (replace `<public-ip>` with your saved IP):
+
+```bash
+ssh -i labsuser.pem ec2-user@<public-ip>
+```
+
+5. Type `yes` when prompted. No password is required (key pair authentication).
+
+---
+
+## The Challenge
+
+- Write a Python script that displays all prime numbers between 1 and 250
+- Store the results in `results.txt`
+- Test the script and verify the output
+- Save the script and note its absolute path
+
+> Python 2 and Python 3 are both installed. **Python 3 is recommended.**
+
+---
+
+## Solution
+
+### Step 1 — Create the Script
+
+```bash
+nano primes.py
+```
+
+Paste the following code:
+
+```python
+# primes.py
+# Finds all prime numbers between 1 and 250 and saves them to results.txt
+
+def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, int(n ** 0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+primes = [n for n in range(1, 251) if is_prime(n)]
+
+# Display the results
+print("Prime numbers between 1 and 250:")
+for p in primes:
+    print(p)
+
+# Store the results in results.txt
+with open("results.txt", "w") as f:
+    for p in primes:
+        f.write(str(p) + "\n")
+
+print(f"\nTotal primes found: {len(primes)}")
+print("Results saved to results.txt")
+```
+
+Save and exit nano: `Ctrl+O` → `Enter` → `Ctrl+X`
+
+---
+
+### Step 2 — Run the Script
+
+```bash
+python3 primes.py
+```
+
+---
+
+### Step 3 — Verify the Results
+
+View the file contents:
+
+```bash
+cat results.txt
+```
+
+Count the primes (expected: **53**):
+
+```bash
+wc -l results.txt
+```
+
+Expected first and last values:
+
+```
+2
+3
+5
+7
+...
+241
+```
+
+> There are **53 prime numbers** between 1 and 250. The largest is **241**.
+
+---
+
+### Step 4 — Note the Script's Absolute Path
+
+```bash
+realpath primes.py
+```
+
+Expected output:
+
+```
+/home/ec2-user/primes.py
+```
+
+---
+
+## How the Script Works
+
+| Component                          | Purpose                                                        |
+|------------------------------------|----------------------------------------------------------------|
+| `is_prime(n)`                      | Returns `True` if `n` has no divisors other than 1 and itself  |
+| `range(2, int(n ** 0.5) + 1)`      | Only checks divisors up to the square root of `n` (efficient)  |
+| List comprehension                 | Builds the list of primes from 1 to 250                        |
+| `open("results.txt", "w")`         | Creates or overwrites the results file                         |
+| `f.write(str(p) + "\n")`           | Writes each prime on its own line                              |
+
+---
+
+## Summary of Commands Used
+
+| Command                  | Purpose                                      |
+|--------------------------|----------------------------------------------|
+| `ssh -i labsuser.pem ...`| Connect to the Linux Host                    |
+| `nano primes.py`         | Create and edit the Python script            |
+| `python3 primes.py`      | Run the script using Python 3                |
+| `cat results.txt`        | Display the saved results                    |
+| `wc -l results.txt`      | Count the number of lines (primes) saved     |
+| `realpath primes.py`     | Show the absolute path of the script         |
+
+---
+
+## Lab Complete
+
+1. Choose **End Lab** at the top of the page → choose **Yes**
+2. Close the panel with the **X**
+
+> Lab resources persist and are available when you start the lab again.
+
+---
+
+## Additional Resources
+
+- [Python 3 Documentation](https://docs.python.org/3/)
+- [Python File I/O](https://docs.python.org/3/tutorial/inputoutput.html#reading-and-writing-files)
+- [Connect to Your Linux Instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/connect-to-linux-instance.html)
+- [AWS Training and Certification](https://aws.amazon.com/training/)
